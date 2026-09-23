@@ -18,6 +18,6 @@ class CreateEmployees < ActiveRecord::Migration[7.2]
     add_index :employees, :employee_number, unique: true
     add_index :employees, :work_email, unique: true
     add_index :employees, :employment_status
-    add_index :employees, [:last_name, :first_name]
+    add_index :employees, [ :last_name, :first_name ]
   end
 end

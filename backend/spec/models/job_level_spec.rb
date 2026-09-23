@@ -14,6 +14,6 @@ RSpec.describe JobLevel, type: :model do
     low = create(:job_level, rank: 5)
     high = create(:job_level, rank: 1)
 
-    expect(JobLevel.all).to eq([high, low])
+    expect(JobLevel.all).to eq([ high, low ])
   end
 end

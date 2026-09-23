@@ -19,7 +19,7 @@ RSpec.describe "Api::V1::Employees", type: :request do
 
       expect(response).to have_http_status(:ok)
       body = JSON.parse(response.body)
-      expect(body["employees"].map { |e| e["full_name"] }).to eq(["Amir Aziz", "Zara Ziegler"])
+      expect(body["employees"].map { |e| e["full_name"] }).to eq([ "Amir Aziz", "Zara Ziegler" ])
       expect(body["meta"]).to include("current_page" => 1, "total_count" => 2)
     end
 

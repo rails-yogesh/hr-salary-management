@@ -82,7 +82,7 @@ RSpec.describe Dashboard::Analytics do
 
       result = described_class.salary_distribution
 
-      expect(result.map { |r| r[:label] }).to eq([l1.name, l2.name])
+      expect(result.map { |r| r[:label] }).to eq([ l1.name, l2.name ])
       l1_row = result.first
       expect(l1_row[:headcount]).to eq(2)
       expect(l1_row[:min_annual_cost_usd_cents]).to eq(50_000_00)

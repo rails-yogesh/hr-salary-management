@@ -13,7 +13,7 @@ class CreateCompensationRecords < ActiveRecord::Migration[7.2]
       t.timestamps
     end
 
-    add_index :compensation_records, [:employee_id, :effective_date]
+    add_index :compensation_records, [ :employee_id, :effective_date ]
 
     # A "current" compensation record is one with end_date IS NULL. This partial
     # unique index is the DB-level guarantee behind the append-only history
