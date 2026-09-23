@@ -13,6 +13,7 @@ class CompensationRecord < ApplicationRecord
   validates :pay_frequency, presence: true
   validates :change_reason, presence: true
   validate :end_date_on_or_after_effective_date
+  validate :effective_date_not_before_hire_date
   validate :only_one_current_record_per_employee, if: -> { end_date.nil? }
 
   scope :current, -> { where(end_date: nil) }
@@ -35,6 +36,17 @@ class CompensationRecord < ApplicationRecord
     return if end_date >= effective_date
 
     errors.add(:end_date, "can't be before effective date")
+  end
+
+  # Security review 2026-09-23 (SEC-H1): nothing previously stopped a
+  # compensation record from being backdated to before the employee was
+  # even hired, silently corrupting the append-only history the rest of
+  # the app trusts.
+  def effective_date_not_before_hire_date
+    return unless effective_date && employee&.hire_date
+    return if effective_date >= employee.hire_date
+
+    errors.add(:effective_date, "can't be before the employee's hire date (#{employee.hire_date})")
   end
 
   # Backs up the DB partial unique index (see the compensation_records

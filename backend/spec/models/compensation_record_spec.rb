@@ -84,7 +84,52 @@ RSpec.describe CompensationRecord, type: :model do
           created_at: Time.current,
           updated_at: Time.current
         })
-      }.to raise_error(ActiveRecord::RecordNotUnique)
+        # Either the partial unique index (two open-ended rows) or the
+        # exclusion constraint below (their date ranges necessarily
+        # overlap, since both are unbounded above) can be the one that
+        # actually fires here — both are DB-level guarantees now.
+      }.to raise_error(ActiveRecord::StatementInvalid)
+    end
+  end
+
+  describe "effective_date_not_before_hire_date (security review 2026-09-23, SEC-H1)" do
+    it "rejects an effective_date before the employee's hire date" do
+      employee = create(:employee, hire_date: Date.new(2026, 1, 1))
+      record = build(:compensation_record, employee: employee, effective_date: Date.new(2025, 12, 31))
+
+      expect(record).not_to be_valid
+      expect(record.errors[:effective_date]).to include("can't be before the employee's hire date (2026-01-01)")
+    end
+
+    it "allows an effective_date on the hire date itself" do
+      employee = create(:employee, hire_date: Date.new(2026, 1, 1))
+      record = build(:compensation_record, employee: employee, effective_date: Date.new(2026, 1, 1))
+
+      expect(record).to be_valid
+    end
+  end
+
+  describe "no overlapping date ranges per employee (security review 2026-09-23, SEC-H1)" do
+    it "rejects an insert whose range overlaps an already-closed historical record, at the database level" do
+      employee = create(:employee, hire_date: Date.new(2020, 1, 1))
+      create(:compensation_record, employee: employee, effective_date: Date.new(2020, 1, 1), end_date: Date.new(2020, 12, 31))
+      create(:compensation_record, employee: employee, effective_date: Date.new(2021, 1, 1), end_date: nil)
+
+      expect {
+        # Bypasses app validations entirely, proving the guarantee holds at
+        # the DB layer even if application code has a bug.
+        CompensationRecord.insert!({
+          employee_id: employee.id,
+          amount_cents: 100,
+          currency_code: "USD",
+          pay_frequency: 1,
+          change_reason: 4,
+          effective_date: Date.new(2020, 6, 1), # falls inside the first (closed) record's range
+          end_date: Date.new(2020, 8, 1),
+          created_at: Time.current,
+          updated_at: Time.current
+        })
+      }.to raise_error(ActiveRecord::StatementInvalid, /conflicting key value violates exclusion constraint/)
     end
   end
 

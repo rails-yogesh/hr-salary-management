@@ -10,8 +10,9 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_09_23_135339) do
+ActiveRecord::Schema[7.2].define(version: 2026_09_23_154507) do
   # These are extensions that must be enabled in order to support this database
+  enable_extension "btree_gist"
   enable_extension "plpgsql"
 
   create_table "admin_users", force: :cascade do |t|
@@ -36,6 +37,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_23_135339) do
     t.index ["employee_id", "effective_date"], name: "index_compensation_records_on_employee_id_and_effective_date"
     t.index ["employee_id"], name: "index_compensation_records_on_employee_id"
     t.index ["employee_id"], name: "index_compensation_records_on_employee_id_current", unique: true, where: "(end_date IS NULL)"
+    t.exclusion_constraint "employee_id WITH =, daterange(effective_date, end_date, '[]'::text) WITH &&", using: :gist, name: "compensation_records_no_overlapping_date_ranges"
   end
 
   create_table "countries", force: :cascade do |t|

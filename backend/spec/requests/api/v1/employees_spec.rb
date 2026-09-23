@@ -126,6 +126,19 @@ RSpec.describe "Api::V1::Employees", type: :request do
 
       expect(response).to have_http_status(:unprocessable_content)
     end
+
+    it "returns 422 for a starting compensation record backdated before hire_date (security review 2026-09-23, SEC-H1)" do
+      backdated_params = valid_params.deep_merge(
+        employee: { hire_date: "2026-01-01" },
+        compensation: { effective_date: "2020-01-01" }
+      )
+
+      expect {
+        post "/api/v1/employees", params: backdated_params, headers: headers
+      }.not_to change(Employee, :count)
+
+      expect(response).to have_http_status(:unprocessable_content)
+    end
   end
 
   describe "PATCH /api/v1/employees/:id" do

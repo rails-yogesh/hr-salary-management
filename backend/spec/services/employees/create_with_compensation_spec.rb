@@ -62,4 +62,17 @@ RSpec.describe Employees::CreateWithCompensation do
     expect(Employee.count).to eq(0)
     expect(CompensationRecord.count).to eq(0)
   end
+
+  it "rejects (and rolls back) a starting compensation record backdated before the hire date (security review 2026-09-23, SEC-H1)" do
+    attrs = employee_attributes.merge(hire_date: Date.new(2026, 1, 1))
+    backdated_compensation = compensation_attributes.merge(effective_date: Date.new(2020, 1, 1))
+    service = described_class.new(employee_attributes: attrs, compensation_attributes: backdated_compensation)
+
+    result = service.call
+
+    expect(result).not_to be_success
+    expect(result.errors.join).to match(/can't be before the employee's hire date/)
+    expect(Employee.count).to eq(0)
+    expect(CompensationRecord.count).to eq(0)
+  end
 end
