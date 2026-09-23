@@ -13,6 +13,7 @@ Rails.application.routes.draw do
         member do
           patch :terminate
         end
+        resources :compensation_records, only: %i[create]
       end
     end
   end

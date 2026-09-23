@@ -7,6 +7,8 @@ class CompensationRecord < ApplicationRecord
   validates :amount_cents, presence: true, numericality: { greater_than: 0 }
   validates :currency_code, presence: true, length: { is: 3 }
   validates :effective_date, presence: true
+  validates :pay_frequency, presence: true
+  validates :change_reason, presence: true
   validate :end_date_on_or_after_effective_date
   validate :only_one_current_record_per_employee, if: -> { end_date.nil? }
 
