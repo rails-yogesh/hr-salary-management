@@ -91,12 +91,26 @@ existing conventions to match.
 ## Security posture (explicit, not assumed)
 
 Labeling this clearly since it's the section most likely to matter if this
-codebase's patterns get reused elsewhere:
+codebase's patterns get reused elsewhere. A full independent security +
+code review was run against this codebase — see
+`docs/security/2026-09-23-full-repo-final-review.md` for the complete
+findings, remediation log, and what's still an open/accepted gap. This
+section is the living summary; that report is the point-in-time record.
 
 - **Access control**: single HR-admin role, JWT bearer auth, deny-by-default
   on every controller (see above). No RBAC — there is exactly one persona
   in scope (`docs/REQUIREMENTS.md`). Do not treat this auth scheme as a
   template for a multi-tenant or multi-role system; it isn't one.
+  `/api/v1/login` is rate-limited (rack-attack, 5 attempts / 20s by IP and
+  by email — `config/initializers/rack_attack.rb`), and `AdminUser`
+  requires a 12-character-minimum password — both closed after the
+  security review found the single admin account was an unthrottled,
+  unconstrained brute-force target.
+  **Accepted gap**: JWTs cannot be revoked before their 24h expiry — the
+  only "logout" is the frontend clearing `localStorage`; there's no
+  server-side denylist. Low impact for a single trusted operator; revisit
+  with a `jti` + revocation list if this is ever deployed for more than
+  that.
 - **Secrets management**: `SECRET_KEY_BASE` is read from `ENV` (never
   committed); `config/master.key` is gitignored and not used by the
   Docker image. The docker-compose stack ships a placeholder
@@ -108,18 +122,39 @@ codebase's patterns get reused elsewhere:
 - **Input validation**: all mutations go through ActiveRecord validations
   and strong parameters (`permit`); the search scope uses a parameterized
   `ILIKE` (`sanitize_sql_like`), not string interpolation — no raw SQL is
-  built from user input anywhere in the codebase.
+  built from user input anywhere in the codebase. Compensation records are
+  validated against both the employee's hire date and the employee's full
+  compensation history (not just the current record), backed by a Postgres
+  exclusion constraint as the DB-level guarantee — see
+  `CompensationRecord#effective_date_not_before_hire_date` and the
+  `compensation_records_no_overlapping_date_ranges` constraint.
+- **Network exposure**: only nginx's port is published to the host
+  (`docker-compose.yml`); the Rails backend is reachable solely over the
+  internal compose network, by service name. The browser only ever talks
+  to nginx on one origin — this is now actually enforced, not just
+  documented.
 - **Transport**: `config.force_ssl` is off by default
   (`config/environments/production.rb`) because the docker-compose
   deployment serves plain HTTP with no TLS-terminating proxy in front of
   it. Set `FORCE_SSL=true` if this is ever deployed behind real TLS
   termination.
+- **Browser-side hardening**: nginx sends `X-Content-Type-Options`,
+  `X-Frame-Options: DENY`, `Referrer-Policy`, and a same-origin
+  `Content-Security-Policy` on the SPA (not on `/api/`, which Rails
+  already headers itself — see `frontend/nginx.conf`). Defense-in-depth:
+  React's default escaping means there's no XSS sink in this app today,
+  but these headers blunt what a future one could do.
 - **Data at rest**: no field-level encryption on salary amounts. Standard
   controls apply (auth required, parameterized queries, no PII in logs —
   `filter_parameter_logging.rb`), but this is a gap to close before this
   pattern is used with real employee data. Flagged as unverified/ASSUMPTION
   territory rather than treated as already handled — see
   `docs/REQUIREMENTS.md`'s "deliberately out of scope" section.
+- **Dependencies**: `bundle-audit` (ruby-advisory-db) and `npm audit` both
+  report zero known vulnerabilities as of 2026-09-23. Brakeman flags one
+  item: Rails 7.2.3.2's support window ended 2026-08-09 — an upgrade is
+  tracked as a follow-up, not fixed inline (a framework upgrade warrants
+  its own review).
 - **Seed data**: every employee record is Faker-generated. No real
   employee or customer PII exists anywhere in this repository, database,
   or seed script.

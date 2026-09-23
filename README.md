@@ -11,6 +11,7 @@ org pays people, across 10,000 seeded employees in 6 countries.
 - **Trade-offs and performance notes**: [docs/TRADE_OFFS.md](docs/TRADE_OFFS.md)
 - **How this was built**: [docs/AI_ASSISTED_DEVELOPMENT.md](docs/AI_ASSISTED_DEVELOPMENT.md)
 - **Full step-by-step log + prompts used**: [docs/DEVELOPMENT_LOG.md](docs/DEVELOPMENT_LOG.md)
+- **Security + code review (findings + remediation log)**: [docs/security/2026-09-23-full-repo-final-review.md](docs/security/2026-09-23-full-repo-final-review.md)
 
 ## Quick start (Docker Compose)
 
