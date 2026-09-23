@@ -30,5 +30,17 @@ RSpec.describe "Api::V1::Sessions", type: :request do
 
       expect(response).to have_http_status(:unauthorized)
     end
+
+    it "throttles repeated attempts (security review 2026-09-23, SEC-M1)" do
+      Rack::Attack::LOGIN_LIMIT.times do
+        post "/api/v1/login", params: { email: "hr@acme.test", password: "wrong" }
+        expect(response).to have_http_status(:unauthorized)
+      end
+
+      post "/api/v1/login", params: { email: "hr@acme.test", password: "wrong" }
+
+      expect(response).to have_http_status(:too_many_requests)
+      expect(JSON.parse(response.body)["error"]).to match(/too many login attempts/i)
+    end
   end
 end
