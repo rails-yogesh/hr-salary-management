@@ -7,6 +7,13 @@ Rails.application.routes.draw do
     namespace :v1 do
       get "health", to: "health#show"
       post "login", to: "sessions#create"
+      get "lookups", to: "lookups#index"
+
+      resources :employees, only: %i[index show create update] do
+        member do
+          patch :terminate
+        end
+      end
     end
   end
 end

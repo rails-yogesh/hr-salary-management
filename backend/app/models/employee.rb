@@ -28,6 +28,14 @@ class Employee < ApplicationRecord
     )
   }
 
+  # Employee numbers are server-generated (never client-supplied) so HR
+  # doesn't have to invent IDs and two concurrent creates can't collide.
+  def self.next_employee_number
+    last_number = order(Arel.sql("employee_number DESC")).limit(1).pick(:employee_number)
+    sequence = last_number ? last_number.delete_prefix("EMP").to_i + 1 : 1
+    format("EMP%06d", sequence)
+  end
+
   def full_name
     "#{first_name} #{last_name}"
   end

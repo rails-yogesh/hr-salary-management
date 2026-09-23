@@ -80,4 +80,16 @@ RSpec.describe Employee, type: :model do
       expect(Employee.search("").count).to eq(2)
     end
   end
+
+  describe ".next_employee_number" do
+    it "starts at EMP000001 when there are no employees" do
+      expect(Employee.next_employee_number).to eq("EMP000001")
+    end
+
+    it "increments past the highest existing number" do
+      create(:employee, employee_number: "EMP000042")
+
+      expect(Employee.next_employee_number).to eq("EMP000043")
+    end
+  end
 end
