@@ -27,8 +27,14 @@ first boot (idempotent; safe on every restart).
 Once it's up:
 
 - App: <http://localhost:8080>
-- API directly: <http://localhost:3000/api/v1>
+- API (via nginx, same origin as the app): <http://localhost:8080/api/v1>
 - Login: `hr@acme.test` / `changeme123!` (overridable — see `.env.example`)
+
+(The backend container's port isn't published to the host — the browser
+only ever talks to nginx on one origin, per `docs/ARCHITECTURE.md`. For
+local debugging against the API directly, use
+`docker compose exec backend curl http://localhost:3000/...` from inside
+the container, or temporarily add a `ports:` mapping back.)
 
 To stop: `docker compose down`. To wipe the seeded data and start over:
 `docker compose down -v`.
