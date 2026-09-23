@@ -10,6 +10,7 @@ org pays people, across 10,000 seeded employees in 6 countries.
 - **How it's built and why**: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - **Trade-offs and performance notes**: [docs/TRADE_OFFS.md](docs/TRADE_OFFS.md)
 - **How this was built**: [docs/AI_ASSISTED_DEVELOPMENT.md](docs/AI_ASSISTED_DEVELOPMENT.md)
+- **Full step-by-step log + prompts used**: [docs/DEVELOPMENT_LOG.md](docs/DEVELOPMENT_LOG.md)
 
 ## Quick start (Docker Compose)
 
