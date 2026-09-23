@@ -28,4 +28,27 @@ RSpec.describe AdminUser, type: :model do
     expect(user.authenticate("correct-horse-battery-staple")).to eq(user)
     expect(user.authenticate("wrong-password")).to be false
   end
+
+  describe "password length (security review 2026-09-23, SEC-M2)" do
+    it "rejects a password shorter than 12 characters" do
+      user = build(:admin_user, password: "short1!")
+
+      expect(user).not_to be_valid
+      expect(user.errors[:password]).to be_present
+    end
+
+    it "accepts a password of exactly 12 characters" do
+      user = build(:admin_user, password: "exactly12chr")
+
+      expect(user).to be_valid
+    end
+
+    it "does not require a password on updates that don't touch it" do
+      user = create(:admin_user)
+
+      user.email = "new-email@acme.test"
+
+      expect(user).to be_valid
+    end
+  end
 end
