@@ -157,6 +157,71 @@ The whole project was built with Claude Code in one continuous session.
 
 27. Wrote this development log at the user's request.
 
+### Phase 8 — Final security and code review
+
+28. Launched a full security + code quality review of the entire
+    repository (backend, frontend, Docker/deployment config, git history,
+    secrets hygiene) via a dedicated reviewer agent, at the user's request
+    for "one final security and code review." Result: 0 Critical, 1 High,
+    5 Medium, 6 Low, 4 Info findings, saved to
+    `docs/security/2026-09-23-full-repo-final-review.md`. Everything
+    already documented in `docs/ARCHITECTURE.md`'s security posture
+    section checked out as accurate; the two findings that mattered most
+    weren't on that list.
+29. Fixed the High finding (SEC-H1): compensation records could be
+    backdated before an employee's hire date, or overlap an already-closed
+    historical record, with nothing catching it anywhere. Added a model
+    validation, changed the raise-recording service to check the full
+    history (not just the current record), and added a Postgres exclusion
+    constraint as a DB-level backstop — mirroring the existing pattern for
+    the "one current record" invariant. Reproduced the exact exploit from
+    the report as a regression test, confirmed it failed before the fix
+    and passed after. (`1e927dd`)
+30. Fixed SEC-M1 (no rate limiting on `/api/v1/login`): added rack-attack,
+    throttling by IP and by email, verified against both form and JSON
+    request bodies and a live `docker-compose` round trip. Also added a
+    test-support hook to reset rack-attack's counters between specs, since
+    they persist across the whole suite otherwise. (`7cad0b2`)
+31. Fixed SEC-M2 (no minimum password length on the admin account): added
+    a 12-character minimum validation; confirmed the seeded default
+    password and factory default both already qualified. (`372acbd`)
+32. Fixed SEC-M4 (backend port published directly to the host, bypassing
+    nginx): removed the `ports:` mapping in `docker-compose.yml`. Verified
+    via a full `docker compose down -v && up --build` that port 3000 now
+    refuses host connections while the app remains fully functional
+    through nginx on :8080 — including re-verifying login, rate limiting,
+    and the SEC-H1 fix all still work end-to-end in the rebuilt
+    containers. (`9a2c214`)
+33. Fixed SEC-M5 (no security headers anywhere): added
+    `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, and a
+    same-origin CSP to nginx's SPA location specifically — not
+    server-wide, since Rails already sends its own equivalent headers on
+    API responses and duplicating them risked sending conflicting
+    `X-Frame-Options` values on the same response. Verified with `curl -I`
+    and a real headless-Chrome pass (login, dashboard, employee list) that
+    the CSP doesn't break anything. (`ab800d9`)
+34. Ran the two dependency scanners the review had flagged as unexecuted:
+    `bin/brakeman` (one finding — Rails 7.2.3.2 is past its support
+    window per Brakeman's own EOL database, logged as a separate
+    follow-up rather than fixed inline) and `bundle-audit`/`npm audit`
+    (both clean, zero known vulnerabilities across either stack).
+35. Added a Remediation Log to the security report (appended, not
+    rewriting the original findings) recording what was fixed, by which
+    commit, and what's carried forward as an explicit accepted gap
+    (SEC-M3, JWT revocation) versus backlog (the Low/Info items). Updated
+    `docs/ARCHITECTURE.md`'s security posture section to match the new
+    state. (`b90f797`)
+36. Pushed all of the above to `origin/main`.
+
+### Phase 9 — Keeping this log itself current
+
+37. Updated this document (again) to add Phase 8 and the prompts that
+    drove it, at the user's request — asked for *before* the Phase 8
+    commits were pushed, but arrived after the first push of that batch
+    had already gone out (see Prompt 10). Handled as a follow-up
+    push rather than an unpick/redo, since the commits themselves were
+    correct and complete; only this log was behind.
+
 ---
 
 ## 2. Prompts used
@@ -265,6 +330,39 @@ instruction not to fabricate results from in-flight background work.)
 
 > lets do one thing move the screenshot of testing to the current repo folder under test folder and commit them
 
-### Prompt 6 — this document
+### Prompt 6 — this document (first version)
 
 > Please also create a one document and list all the steps we have done while developing the application and also mention the prompt we have used
+
+### Prompt 7 — request the final security and code review
+
+> Lets do one finnal security and code review
+
+### Prompt 8 — mid-review check-in
+
+> m
+
+(Sent while the review agent was still running in the background;
+answered with a status update, not a guess at findings that hadn't come
+back yet.)
+
+### Prompt 9 — approve all fixes, tie commits to findings, push the doc
+
+> yes go ahead and after the fix mentioned the commit msg along with the security finding in the doc we will also push the doc
+
+Interpreted as: fix everything the review flagged as worth fixing
+(the High finding plus all four cheap Medium fixes — confirmed as options
+1 and 2 offered after the review completed), reference the specific
+finding ID from the report in each fix's commit message, update the
+report itself with what was fixed, and push it all.
+
+### Prompt 10 — update this log before the push (arrived mid-push)
+
+> before pusshing lets update the prompt doc to also include the prompt about securtiy and code review
+
+This message arrived after the Phase 8 commits (`1e927dd` through
+`b90f797`) had already been pushed to `origin/main` — this document was
+the one piece of that batch not yet updated to reflect it. Addressed as
+a same-day follow-up: this document updated to add Phase 8 and Prompts
+7-10, then pushed as its own commit (see Phase 9 above) rather than
+rewriting history to insert it earlier.
