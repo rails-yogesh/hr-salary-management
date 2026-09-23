@@ -25,6 +25,12 @@ gem "bcrypt", "~> 3.1.7"
 # JWT bearer tokens for API authentication
 gem "jwt"
 
+# Generates the synthetic 10,000-employee demo dataset. Kept out of the
+# dev/test-only group deliberately: db/seeds.rb is meant to run in every
+# environment (including the deployed Docker container) to populate the
+# demo. A real product would isolate demo-data generation from production.
+gem "faker"
+
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
   gem "debug", platforms: %i[ mri windows ], require: "debug/prelude"
@@ -37,7 +43,6 @@ group :development, :test do
 
   gem "rspec-rails", "~> 7.1"
   gem "factory_bot_rails"
-  gem "faker"
 end
 
 group :test do
