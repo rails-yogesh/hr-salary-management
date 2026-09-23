@@ -1,4 +1,4 @@
-import { screen, waitFor } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { Route, Routes } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -87,9 +87,10 @@ describe('EmployeeDetailPage', () => {
     expect(await screen.findByRole('heading', { name: 'Grace Hopper' })).toBeInTheDocument()
     expect(screen.getByText(/Job title:/)).toHaveTextContent('Staff Engineer')
     expect(screen.getByText(/year\)/)).toHaveTextContent('$150,000 / annual (~$150,000 / year)')
-    expect(screen.getAllByRole('row')).toHaveLength(3) // header + 2 history rows
-    expect(screen.getByText('Hire')).toBeInTheDocument()
-    expect(screen.getByText('Promotion')).toBeInTheDocument()
+    const historyTable = screen.getByRole('table')
+    expect(within(historyTable).getAllByRole('row')).toHaveLength(3) // header + 2 history rows
+    expect(within(historyTable).getByText('Hire')).toBeInTheDocument()
+    expect(within(historyTable).getByText('Promotion')).toBeInTheDocument()
   })
 
   it('shows an error state when the employee cannot be loaded', async () => {

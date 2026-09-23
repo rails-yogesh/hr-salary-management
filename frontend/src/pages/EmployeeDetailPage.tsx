@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ApiError } from '../api/client'
 import { CompensationHistoryTable } from '../components/CompensationHistoryTable'
+import { RecordRaiseForm } from '../components/RecordRaiseForm'
 import { StatusBadge } from '../components/StatusBadge'
 import { useEmployee } from '../hooks/useEmployee'
 import { useTerminateEmployee } from '../hooks/useTerminateEmployee'
@@ -96,10 +97,17 @@ export function EmployeeDetailPage() {
         )}
       </div>
 
-      <div className="card">
+      <div className="card detail-section">
         <h3>Compensation history</h3>
         <CompensationHistoryTable records={data.compensation_history} />
       </div>
+
+      {data.employment_status !== 'terminated' && (
+        <div className="card">
+          <h3>Record a raise or adjustment</h3>
+          <RecordRaiseForm employeeId={data.id} defaultCurrencyCode={data.current_compensation?.currency_code ?? 'USD'} />
+        </div>
+      )}
     </div>
   )
 }
