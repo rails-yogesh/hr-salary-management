@@ -81,6 +81,16 @@ RSpec.describe Employee, type: :model do
     end
   end
 
+  describe ".currently_employed" do
+    it "includes active and on_leave but excludes terminated" do
+      active = create(:employee, employment_status: :active)
+      on_leave = create(:employee, employment_status: :on_leave)
+      create(:employee, :terminated)
+
+      expect(Employee.currently_employed).to contain_exactly(active, on_leave)
+    end
+  end
+
   describe ".next_employee_number" do
     it "starts at EMP000001 when there are no employees" do
       expect(Employee.next_employee_number).to eq("EMP000001")

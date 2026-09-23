@@ -28,6 +28,11 @@ class Employee < ApplicationRecord
     )
   }
 
+  # Anyone still drawing a salary — active or on leave. Used by dashboard
+  # cost/headcount reporting; terminated employees are excluded because
+  # they're no longer being paid.
+  scope :currently_employed, -> { where(employment_status: %i[active on_leave]) }
+
   # Employee numbers are server-generated (never client-supplied) so HR
   # doesn't have to invent IDs and two concurrent creates can't collide.
   def self.next_employee_number

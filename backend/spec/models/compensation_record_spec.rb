@@ -5,6 +5,13 @@ RSpec.describe CompensationRecord, type: :model do
 
   it { is_expected.to be_valid }
   it { is_expected.to belong_to(:employee) }
+
+  it "joins to its exchange rate by currency code" do
+    rate = create(:exchange_rate, currency_code: "EUR")
+    record = create(:compensation_record, currency_code: "EUR")
+
+    expect(record.exchange_rate).to eq(rate)
+  end
   it { is_expected.to validate_presence_of(:currency_code) }
   it { is_expected.to validate_presence_of(:effective_date) }
   it { is_expected.to define_enum_for(:pay_frequency).with_values(monthly: 0, annual: 1) }

@@ -15,6 +15,11 @@ Rails.application.routes.draw do
         end
         resources :compensation_records, only: %i[create]
       end
+
+      get "dashboard/summary", to: "dashboard#summary"
+      get "dashboard/by_country", to: "dashboard#by_country"
+      get "dashboard/by_department", to: "dashboard#by_department"
+      get "dashboard/salary_distribution", to: "dashboard#salary_distribution"
     end
   end
 end

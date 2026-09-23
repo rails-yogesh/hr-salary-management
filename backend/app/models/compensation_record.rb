@@ -1,5 +1,8 @@
 class CompensationRecord < ApplicationRecord
   belongs_to :employee, inverse_of: :compensation_records
+  # Natural-key join (currency_code, not id) so dashboard queries can convert
+  # to USD via a single SQL join instead of an N+1 ExchangeRate lookup per row.
+  belongs_to :exchange_rate, foreign_key: :currency_code, primary_key: :currency_code, optional: true, inverse_of: false
 
   enum :pay_frequency, { monthly: 0, annual: 1 }
   enum :change_reason, { hire: 0, promotion: 1, annual_review: 2, market_adjustment: 3, correction: 4 }
