@@ -1,15 +1,11 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { StatusBadge } from '../components/StatusBadge'
 import { useDebouncedValue } from '../hooks/useDebouncedValue'
 import { useEmployees } from '../hooks/useEmployees'
 import { useLookups } from '../hooks/useLookups'
+import { EMPLOYMENT_STATUS_LABELS } from '../utils/employmentStatus'
 import { formatMoney } from '../utils/format'
-
-const STATUS_LABELS: Record<string, string> = {
-  active: 'Active',
-  terminated: 'Terminated',
-  on_leave: 'On Leave',
-}
 
 export function EmployeeListPage() {
   const [search, setSearch] = useState('')
@@ -70,7 +66,7 @@ export function EmployeeListPage() {
         </select>
         <select aria-label="Filter by status" value={status} onChange={handleFilterChange(setStatus)}>
           <option value="">All statuses</option>
-          {Object.entries(STATUS_LABELS).map(([value, label]) => (
+          {Object.entries(EMPLOYMENT_STATUS_LABELS).map(([value, label]) => (
             <option key={value} value={value}>
               {label}
             </option>
@@ -106,9 +102,7 @@ export function EmployeeListPage() {
                   <td>{employee.department.name}</td>
                   <td>{employee.job_title}</td>
                   <td>
-                    <span className={`status-badge ${employee.employment_status}`}>
-                      {STATUS_LABELS[employee.employment_status]}
-                    </span>
+                    <StatusBadge status={employee.employment_status} />
                   </td>
                   <td>
                     {employee.current_compensation
