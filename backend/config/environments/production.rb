@@ -34,7 +34,11 @@ Rails.application.configure do
   # config.assume_ssl = true
 
   # Force all access to the app over SSL, use Strict-Transport-Security, and use secure cookies.
-  config.force_ssl = true
+  # Off by default: the docker-compose deployment for this exercise serves
+  # plain HTTP with no TLS-terminating proxy in front of it. A real
+  # deployment behind a load balancer/CDN that terminates TLS should set
+  # FORCE_SSL=true (and typically config.assume_ssl = true alongside it).
+  config.force_ssl = ActiveModel::Type::Boolean.new.cast(ENV["FORCE_SSL"])
 
   # Skip http-to-https redirect for the default health check endpoint.
   # config.ssl_options = { redirect: { exclude: ->(request) { request.path == "/up" } } }
